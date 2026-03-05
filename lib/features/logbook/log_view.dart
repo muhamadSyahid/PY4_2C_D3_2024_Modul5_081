@@ -17,6 +17,7 @@ class LogView extends StatefulWidget {
 class _LogViewState extends State<LogView> {
   LogController _controller = LogController();
   bool _isLoading = false;
+  bool _isOffline = false; // Status offline
 
   // 1. Tambahkan Controller untuk menangkap input di dalam State
   final TextEditingController _titleController = TextEditingController();
@@ -35,7 +36,10 @@ class _LogViewState extends State<LogView> {
   }
 
   Future<void> _initDatabase() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _isOffline = false;
+    });
     try {
       await LogHelper.writeLog(
         "UI: Memulai inisialisasi database...",
@@ -79,9 +83,21 @@ class _LogViewState extends State<LogView> {
         source: "log_view.dart",
         level: 1,
       );
+      setState(() => _isOffline = true); // Tandai sebagai offline
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Masalah: $e"), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(_isOffline
+                ? "⚠️ Mode Offline: Tidak dapat terhubung ke server."
+                : "Masalah: $e"),
+            backgroundColor: _isOffline ? Colors.orange : Colors.red,
+            action: SnackBarAction(
+              label: 'Coba Lagi',
+              textColor: Colors.white,
+              onPressed: _initDatabase,
+            ),
+          ),
         );
       }
     } finally {
@@ -277,52 +293,7 @@ class _LogViewState extends State<LogView> {
             ),
           ),
           Expanded(
-            child:
-                // ValueListenableBuilder<List<LogModel>>(
-                //   valueListenable: _controller.logsNotifier,
-                //   builder: (context, allLogs, _) {
-                //     final userLogs = _controller.getLogsByUser(widget.username);
-                //     final filteredLogs = userLogs
-                //         .where((log) => log.title
-                //             .toLowerCase()
-                //             .contains(_searchController.text.toLowerCase()))
-                //         .toList();
-
-                //     if (filteredLogs.isEmpty) {
-                //       return Center(
-                //         child: Column(
-                //           mainAxisAlignment: MainAxisAlignment.center,
-                //           children: const [
-                //             Icon(Icons.assignment_outlined,
-                //                 size: 80, color: Colors.grey),
-                //             SizedBox(height: 16),
-                //             Text(
-                //               "Belum ada catatan yang ditemukan.\nSilakan tambahkan catatan baru!",
-                //               textAlign: TextAlign.center,
-                //               style: TextStyle(fontSize: 16, color: Colors.grey),
-                //             ),
-                //           ],
-                //         ),
-                //       );
-                //     }
-
-                //     return ListView.builder(
-                //       padding: const EdgeInsets.symmetric(horizontal: 16),
-                //       itemCount: filteredLogs.length,
-                //       itemBuilder: (context, index) {
-                //         final log = filteredLogs[index];
-                //         return LogItemWidget(
-                //             log: log,
-                //             allLogs: allLogs,
-                //             controller: _controller,
-                //             onEdit: (originalIndex, logModel) {
-                //               _showEditLogDialog(originalIndex, log);
-                //             });
-                //       },
-                //     );
-                //   },
-                // ),
-                ValueListenableBuilder<List<LogModel>>(
+            child: ValueListenableBuilder<List<LogModel>>(
               valueListenable: _controller.logsNotifier,
               builder: (context, currentLogs, child) {
                 if (_isLoading) {
@@ -337,6 +308,7 @@ class _LogViewState extends State<LogView> {
                     ),
                   );
                 }
+
                 // 2. Tampilan jika loading sudah selesai tapi data di Atlas kosong
                 final userLogs = _controller.getLogsByUser(widget.username);
                 final filteredLogs = userLogs
@@ -344,60 +316,70 @@ class _LogViewState extends State<LogView> {
                         .toLowerCase()
                         .contains(_searchController.text.toLowerCase()))
                     .toList();
+
                 if (filteredLogs.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.cloud_off,
-                            size: 64, color: Colors.grey),
-                        const SizedBox(height: 16),
-                        const Text("Belum ada catatan di Cloud."),
-                        ElevatedButton(
-                          onPressed: _showAddLogDialog,
-                          child: const Text("Buat Catatan Pertama"),
+                  return RefreshIndicator(
+                    onRefresh: _initDatabase,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.7,
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize
+                                .min, // Changed to min for better centering
+                            mainAxisAlignment:
+                                MainAxisAlignment.center, // Center vertically
+                            children: [
+                              Icon(
+                                _isOffline
+                                    ? Icons.signal_wifi_off
+                                    : Icons.cloud_off,
+                                size: 64,
+                                color: _isOffline ? Colors.orange : Colors.grey,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                _isOffline
+                                    ? "Anda sedang offline.\nTarik ke bawah untuk mencoba lagi."
+                                    : "Belum ada catatan di Cloud.\nTarik ke bawah untuk memuat ulang.",
+                                textAlign: TextAlign.center,
+                              ),
+                              if (!_isOffline) ...[
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: _showAddLogDialog,
+                                  child: const Text("Buat Catatan Pertama"),
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
-                      ],
+                      ),
                     ),
                   );
                 }
 
                 // Jika data sudah masuk, tampilkan List seperti biasa
-                return ListView.builder(
-                  itemCount: filteredLogs.length,
-                  itemBuilder: (context, index) {
-                    final log = filteredLogs[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      child: LogItemWidget(
-                          log: log,
-                          allLogs: currentLogs,
-                          controller: _controller,
-                          onEdit: (originalIndex, logModel) {
-                            _showEditLogDialog(originalIndex, log);
-                          }),
-                      // ListTile(
-                      //   leading:
-                      //       const Icon(Icons.cloud_done, color: Colors.green),
-                      //   title: Text(log.title),
-                      //   subtitle: Text(log.description),
-                      //   trailing: Row(
-                      //     mainAxisSize: MainAxisSize.min,
-                      //     children: [
-                      //       IconButton(
-                      //         icon: const Icon(Icons.edit, color: Colors.blue),
-                      //         onPressed: () => _showEditLogDialog(index, log),
-                      //       ),
-                      //       IconButton(
-                      //         icon: const Icon(Icons.delete, color: Colors.red),
-                      //         onPressed: () => _controller.removeLog(index),
-                      //       ),
-                      //     ],
-                      //   ),
-                      // ),
-                    );
-                  },
+                return RefreshIndicator(
+                  onRefresh: _initDatabase,
+                  child: ListView.builder(
+                    itemCount: filteredLogs.length,
+                    itemBuilder: (context, index) {
+                      final log = filteredLogs[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        child: LogItemWidget(
+                            log: log,
+                            allLogs: currentLogs,
+                            controller: _controller,
+                            onEdit: (originalIndex, logModel) {
+                              _showEditLogDialog(originalIndex, log);
+                            }),
+                      );
+                    },
+                  ),
                 );
               },
             ),

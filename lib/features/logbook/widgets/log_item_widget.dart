@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:logbook_app_081/features/logbook/log_controller.dart';
 import 'package:logbook_app_081/features/logbook/models/log_model.dart';
 
@@ -25,6 +26,25 @@ class LogItemWidget extends StatelessWidget {
       case 'Pribadi':
       default:
         return Colors.green.shade100;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inSeconds < 60) {
+      return 'Baru saja';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} menit yang lalu';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours} jam yang lalu';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} hari yang lalu';
+    } else {
+      // Menggunakan intl untuk format lokal Indonesia
+      // Pastikan telah menambahkan intl: ^0.18.0 di pubspec.yaml
+      return DateFormat('d MMM yyyy', 'id_ID').format(date);
     }
   }
 
@@ -78,10 +98,20 @@ class LogItemWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(log.description),
-              Text(
-                'By ${log.user}',
-                style:
-                    const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'By ${log.user}',
+                    style: const TextStyle(
+                        fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                  Text(
+                    _formatDate(log.date),
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
               ),
             ],
           ),
