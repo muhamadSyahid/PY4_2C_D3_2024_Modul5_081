@@ -337,9 +337,14 @@ class _LogViewState extends State<LogView> {
             child: ValueListenableBuilder<List<LogModel>>(
               valueListenable: _controller.logsNotifier,
               builder: (context, currentLogs, child) {
-                // 1. Ambil data user/tim
-                final userLogs =
-                    _controller.getLogsByUser(widget.currentUser.teamId);
+                // 1. Ambil data user/tim & Filter Visibilitas (Privacy Rule)
+                final userLogs = _controller
+                    .getLogsByUser(widget.currentUser.teamId)
+                    .where((log) {
+                  // LOGIC: Tampilkan jika SAYA adalah PEMILIK atau Catatan PUBLIK
+                  return log.authorId == widget.currentUser.id ||
+                      log.isPublic == true;
+                }).toList();
 
                 // 2. Cek Empty State (Data Kosong)
                 if (userLogs.isEmpty) {

@@ -19,6 +19,8 @@ class LogModel {
   final String authorId;
   @HiveField(6)
   final String teamId;
+  @HiveField(7)
+  final bool isPublic;
 
   LogModel({
     this.id,
@@ -28,6 +30,7 @@ class LogModel {
     required this.category,
     required this.authorId,
     required this.teamId,
+    this.isPublic = false,
   });
 
   // [CONVERT] Memasukkan data ke "Kardus" (BSON/Map) untuk dikirim ke Cloud
@@ -42,6 +45,7 @@ class LogModel {
       'category': category,
       'authorId': authorId,
       'teamId': teamId,
+      'isPublic': isPublic,
     };
   }
 
@@ -55,6 +59,7 @@ class LogModel {
       category: map['category'] ?? '',
       authorId: map['authorId'] ?? 'unknown_user',
       teamId: map['teamId'] ?? 'no_team',
+      isPublic: map['isPublic'] ?? false,
     );
   }
 }

@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:logbook_app_081/features/logbook/log_controller.dart';
 import 'package:logbook_app_081/features/logbook/models/log_model.dart';
 import 'package:logbook_app_081/features/auth/user_model.dart';
-import 'package:logbook_app_081/services/access_control_service.dart';
 
 class LogItemWidget extends StatelessWidget {
   final LogModel log;
@@ -54,12 +53,10 @@ class LogItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final userRole = User.current?.role ?? 'guest';
     final currentUserId = User.current?.id;
     final bool isOwner = log.authorId == currentUserId;
-    final bool canDelete = AccessControlService.canPerform(
-        userRole, AccessControlService.actionDelete,
-        isOwner: isOwner);
+    // SOVEREIGNTY: Hanya pemilik yang bisa menghapus/edit (Role diabaikan)
+    final bool canDelete = isOwner;
 
     return Dismissible(
       key: Key(
@@ -132,10 +129,28 @@ class LogItemWidget extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'By ${log.authorId}',
-                    style: const TextStyle(
-                        fontSize: 12, fontStyle: FontStyle.italic),
+                  Row(
+                    children: [
+                      Text(
+                        'By ${log.authorId}',
+                        style: const TextStyle(
+                            fontSize: 12, fontStyle: FontStyle.italic),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: log.isPublic ? Colors.blue : Colors.grey,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          log.isPublic ? "Public" : "Private",
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 10),
+                        ),
+                      ),
+                    ],
                   ),
                   Text(
                     _formatDate(log.date),
@@ -148,12 +163,8 @@ class LogItemWidget extends StatelessWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // GATEKEEPER: Tombol Edit
-              if (AccessControlService.canPerform(
-                userRole,
-                AccessControlService.actionUpdate,
-                isOwner: isOwner,
-              ))
+              // GATEKEEPER: Tombol Edit (Hanya Owner)
+              if (isOwner)
                 IconButton(
                   icon: const Icon(Icons.edit, color: Colors.blue),
                   onPressed: () {
@@ -163,12 +174,8 @@ class LogItemWidget extends StatelessWidget {
                   },
                 ),
 
-              // GATEKEEPER: Tombol Delete (Optional jika ingin tombol selain swipe)
-              if (AccessControlService.canPerform(
-                userRole,
-                AccessControlService.actionDelete,
-                isOwner: isOwner,
-              ))
+              // GATEKEEPER: Tombol Delete (Hanya Owner)
+              if (isOwner)
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () async {

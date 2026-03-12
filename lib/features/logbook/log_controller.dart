@@ -208,8 +208,9 @@ class LogController {
     String desc,
     String category,
     String authorId,
-    String teamId,
-  ) async {
+    String teamId, {
+    bool isPublic = false,
+  }) async {
     final newLog = LogModel(
       id: ObjectId().oid, // Menggunakan .oid (String) untuk Hive
       title: title,
@@ -218,6 +219,7 @@ class LogController {
       category: category,
       authorId: authorId,
       teamId: teamId,
+      isPublic: isPublic,
     );
 
     // ACTION 1: Simpan ke Hive (Instan)
@@ -245,7 +247,8 @@ class LogController {
 
   // 2. Memperbarui data (Offline-First: Lokal Dulu, Cloud Belakangan)
   Future<void> updateLog(
-      int index, String newTitle, String newDesc, String newCat) async {
+      int index, String newTitle, String newDesc, String newCat,
+      {bool isPublic = false}) async {
     final currentLogs = List<LogModel>.from(logsNotifier.value);
     final oldLog = currentLogs[index];
 
@@ -257,6 +260,7 @@ class LogController {
       category: newCat,
       authorId: oldLog.authorId,
       teamId: oldLog.teamId,
+      isPublic: isPublic,
     );
 
     // 1. Update Lokal (Instant UI Update)

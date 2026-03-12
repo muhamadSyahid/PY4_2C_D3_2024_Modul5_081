@@ -30,6 +30,7 @@ class _LogEditorPageState extends State<LogEditorPage> {
 
   // State for category dropdown
   String _selectedCategory = 'Mechanical';
+  bool _isPublic = false;
 
   final List<String> _categories = ['Mechanical', 'Electronic', 'Software'];
 
@@ -40,6 +41,7 @@ class _LogEditorPageState extends State<LogEditorPage> {
     _descController = TextEditingController(
       text: widget.log?.description ?? '',
     );
+    _isPublic = widget.log?.isPublic ?? false;
 
     // Initialize category
     String initialCategory = widget.log?.category ?? 'Mechanical';
@@ -66,6 +68,7 @@ class _LogEditorPageState extends State<LogEditorPage> {
         _selectedCategory, // Use the selected category directly
         widget.currentUser!.id,
         widget.currentUser!.teamId,
+        isPublic: _isPublic,
       );
     } else {
       // Update
@@ -74,6 +77,7 @@ class _LogEditorPageState extends State<LogEditorPage> {
         _titleController.text,
         _descController.text,
         _selectedCategory, // Use the selected category directly
+        isPublic: _isPublic,
       );
     }
     Navigator.pop(context);
@@ -132,6 +136,18 @@ class _LogEditorPageState extends State<LogEditorPage> {
                       }
                     },
                     decoration: const InputDecoration(labelText: "Kategori"),
+                  ),
+                  const SizedBox(height: 10),
+                  SwitchListTile(
+                    title: const Text("Publikasikan Catatan"),
+                    subtitle: const Text(
+                        "Jika aktif, anggota tim lain dapat melihat catatan ini."),
+                    value: _isPublic,
+                    onChanged: (val) {
+                      setState(() {
+                        _isPublic = val;
+                      });
+                    },
                   ),
                   const SizedBox(height: 10),
                   Expanded(
