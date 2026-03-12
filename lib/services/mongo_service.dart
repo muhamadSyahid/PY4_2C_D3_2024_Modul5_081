@@ -2,6 +2,7 @@ import 'package:mongo_dart/mongo_dart.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logbook_app_081/features/logbook/models/log_model.dart';
 import 'package:logbook_app_081/helpers/log_helper.dart';
+import 'package:logbook_app_081/features/auth/user_model.dart';
 
 class MongoService {
   static final MongoService _instance = MongoService._internal();
@@ -64,17 +65,46 @@ class MongoService {
   }
 
   /// READ: Mengambil data dari Cloud
-  Future<List<LogModel>> getLogs() async {
+  // Future<List<LogModel>> getLogs() async {
+  //   try {
+  //     final collection = await _getSafeCollection(); // Gunakan jalur aman
+
+  //     await LogHelper.writeLog(
+  //       "INFO: Fetching data from Cloud...",
+  //       source: _source,
+  //       level: 3,
+  //     );
+
+  //     // final List<Map<String, dynamic>> data = await collection.find().toList();
+  //     if (User.current == null) {
+  //       return [];
+  //     }
+  //     final data = await collection
+  //         .find(where.eq('teamId', User.current!.teamId))
+  //         .toList();
+  //     return data.map((json) => LogModel.fromMap(json)).toList();
+  //   } catch (e) {
+  //     await LogHelper.writeLog(
+  //       "ERROR: Fetch Failed - $e",
+  //       source: _source,
+  //       level: 1,
+  //     );
+  //     return [];
+  //   }
+  // }
+
+  Future<List<LogModel>> getLogs(String teamId) async {
     try {
       final collection = await _getSafeCollection(); // Gunakan jalur aman
 
       await LogHelper.writeLog(
-        "INFO: Fetching data from Cloud...",
+        "INFO: Fetching data for Team: $teamId",
         source: _source,
         level: 3,
       );
 
-      final List<Map<String, dynamic>> data = await collection.find().toList();
+      final List<Map<String, dynamic>> data =
+          await collection.find(where.eq('teamId', teamId)).toList();
       return data.map((json) => LogModel.fromMap(json)).toList();
     } catch (e) {
       await LogHelper.writeLog(
@@ -85,6 +115,7 @@ class MongoService {
       return [];
     }
   }
+
 
   /// CREATE: Menambahkan data baru
   Future<void> insertLog(LogModel log) async {
@@ -114,7 +145,8 @@ class MongoService {
       if (log.id == null)
         throw Exception("ID Log tidak ditemukan untuk update");
 
-      await collection.replaceOne(where.id(log.id!), log.toMap());
+      await collection.replaceOne(
+          where.id(ObjectId.fromHexString(log.id!)), log.toMap());
 
       await LogHelper.writeLog(
         "DATABASE: Update '${log.title}' Berhasil",
