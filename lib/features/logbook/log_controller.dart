@@ -367,6 +367,10 @@ class LogController {
 
   Future<void> saveToDisk() async {
     final prefs = await SharedPreferences.getInstance();
+    if (logsNotifier.value.isEmpty) {
+      await prefs.remove(_storageKey);
+      return;
+    }
     final String encodedData =
         jsonEncode(logsNotifier.value.map((e) => e.toMap()).toList());
     await prefs.setString(_storageKey, encodedData);
