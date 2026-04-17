@@ -6,6 +6,7 @@ import 'package:logbook_app_081/features/logbook/log_controller.dart';
 import 'package:logbook_app_081/features/logbook/log_editor_page.dart';
 import 'package:logbook_app_081/features/logbook/widgets/log_item_widget.dart';
 import 'package:logbook_app_081/features/logbook/models/log_model.dart';
+import 'package:logbook_app_081/features/vision/vision_view.dart';
 import 'package:logbook_app_081/helpers/log_helper.dart';
 import 'package:logbook_app_081/services/mongo_service.dart';
 import 'package:logbook_app_081/features/auth/user_model.dart';
@@ -264,11 +265,17 @@ class _LogViewState extends State<LogView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () =>
+      //       _goToEditor(), // Panggil fungsi dialog yang baru dibuat
+      //   child: const Icon(Icons.add),
+      // ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () =>
-            _goToEditor(), // Panggil fungsi dialog yang baru dibuat
-        child: const Icon(Icons.add),
+        onPressed: () => Navigator.push(context,
+            MaterialPageRoute(builder: (context) => const VisionView())),
+        child: const Icon(Icons.camera_alt),
       ),
+
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(

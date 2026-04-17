@@ -6,6 +6,9 @@ import 'package:logbook_app_081/features/auth/login_view.dart';
 import 'package:logbook_app_081/features/logbook/models/log_model.dart';
 import 'package:logbook_app_081/features/onboarding/onboarding_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:camera/camera.dart';
+
+List<CameraDescription> cameras = []; 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +22,14 @@ void main() async {
 
   await dotenv.load(fileName: ".env");
   bool isDone = prefs.getBool('is_onboarding_done') ?? false;
+
+  try {
+    // Ambil daftar kamera yang tersedia di perangkat
+    cameras = await availableCameras();
+  } on CameraException catch (e) {
+    print('Error: ${e.code}\nError Message: ${e.description}');
+  }
+
   runApp(MyApp(isDone: isDone));
   // runApp(MyApp());
 }

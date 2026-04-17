@@ -28,6 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  camera: ^0.11.2
   connectivity_plus: ^7.0.0
   cupertino_icons: ^1.0.8
   flutter:
@@ -39,6 +40,7 @@ dependencies:
   intl: ^0.20.2
   mongo_dart: ^0.10.8
   path_provider: ^2.1.5
+  permission_handler: ^12.0.1
   shared_preferences: ^2.2.0
 
 dev_dependencies:
